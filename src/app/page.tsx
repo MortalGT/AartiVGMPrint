@@ -93,13 +93,16 @@ export default function VGMApp() {
 
         {/* HEADER SECTION (Screen Only) */}
         <header className="screen-header">
-          <div className="logo-section">
-            {/* Stylized Aarti Logo Icon */}
-            <svg className="logo-icon-svg" viewBox="0 0 100 40" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ height: '32px' }}>
-              <path d="M10 35 L30 5 L40 18 L32 23 L25 10 L15 35 Z" fill="#0284c7" />
-              <path d="M35 35 L45 20 L55 35 Z" fill="#f97316" />
+          <div className="aarti-brand-logo">
+            <svg className="aarti-symbol" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 90 L44 12 L56 12 L30 90 Z" fill="var(--logo-dark-blue)" />
+              <path d="M44 35 L76 90 L62 90 L36 45 Z" fill="var(--logo-light-blue)" />
+              <path d="M18 84 C32 60, 52 35, 78 15 C60 30, 42 58, 25 88 Z" fill="var(--logo-orange)" />
             </svg>
-            <span className="logo-text">Aarti VGM Print Console</span>
+            <div className="aarti-text-group">
+              <div className="aarti-text-top">AARTI</div>
+              <div className="aarti-text-bottom">PHARMALABS</div>
+            </div>
           </div>
           <div className="connection-badge">
             <span className="status-indicator active"></span>
@@ -354,11 +357,17 @@ export default function VGMApp() {
           {/* Header Section */}
           <div className="print-header-layout">
             <div className="header-logo-container">
-              {/* Exact Stylized Logo from Aarti Pharmalabs */}
-              <svg className="aarti-logo-print" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 32 L35 4 L48 18 L38 23 L30 11 L18 32 Z" fill="#0f4c81" />
-                <path d="M42 32 L54 16 L66 32 Z" fill="#f05a28" />
-              </svg>
+              <div className="aarti-brand-logo">
+                <svg className="aarti-symbol" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 90 L44 12 L56 12 L30 90 Z" fill="var(--logo-dark-blue)" />
+                  <path d="M44 35 L76 90 L62 90 L36 45 Z" fill="var(--logo-light-blue)" />
+                  <path d="M18 84 C32 60, 52 35, 78 15 C60 30, 42 58, 25 88 Z" fill="var(--logo-orange)" />
+                </svg>
+                <div className="aarti-text-group">
+                  <div className="aarti-text-top">AARTI</div>
+                  <div className="aarti-text-bottom">PHARMALABS</div>
+                </div>
+              </div>
               <div className="header-titles">
                 <h1 className="aarti-title-main">AARTI PHARMALABS LTD</h1>
                 <p className="aarti-address">

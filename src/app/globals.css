@@ -15,6 +15,11 @@
   --error: #ef4444;
   --error-bg: rgba(239, 68, 68, 0.07);
   --font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+
+  /* Logo Screen/Dark-mode Colors */
+  --logo-dark-blue: #ffffff;
+  --logo-light-blue: #38bdf8;
+  --logo-orange: #f97316;
 }
 
 /* SCREEN RESET & GENERAL BASE */
@@ -89,19 +94,40 @@ body {
   padding-bottom: 16px;
 }
 
-.logo-section {
+/* BRAND LOGO GRAPHIC SYSTEM */
+.aarti-brand-logo {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.logo-text {
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  background: linear-gradient(135deg, #ffffff 40%, var(--text-secondary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.aarti-symbol {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.aarti-text-group {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.aarti-text-top {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.2px;
+  color: var(--logo-dark-blue);
+  transition: color 0.2s ease;
+}
+
+.aarti-text-bottom {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 2.2px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  transition: color 0.2s ease;
 }
 
 .connection-badge {
@@ -695,6 +721,13 @@ body {
     padding: 0 !important;
   }
 
+  /* Setup brand print logo values */
+  :root {
+    --logo-dark-blue: #0c3260 !important;
+    --logo-light-blue: #0092d6 !important;
+    --logo-orange: #ea5e1a !important;
+  }
+
   /* Show Aarti print layout container */
   .aarti-print-document {
     display: block !important;
@@ -716,21 +749,35 @@ body {
     align-items: center;
     justify-content: flex-start;
     position: relative;
+    height: 70px;
   }
 
-  .aarti-logo-print {
-    width: 90px;
-    height: auto;
+  .header-logo-container .aarti-brand-logo {
     position: absolute;
     left: 0;
     top: 50%;
     transform: translateY(-50%);
   }
 
+  .aarti-symbol {
+    width: 50px !important;
+    height: 50px !important;
+  }
+
+  .aarti-text-top {
+    font-size: 24px !important;
+    color: #0c3260 !important;
+  }
+
+  .aarti-text-bottom {
+    font-size: 10px !important;
+    color: #718096 !important;
+  }
+
   .header-titles {
     text-align: center;
     width: 100%;
-    padding-left: 100px; /* offset the logo width */
+    padding-left: 140px; /* offset the logo width */
   }
 
   .aarti-title-main {
