@@ -3,21 +3,28 @@
 import React, { useState, FormEvent } from 'react';
 
 interface VgmDetails {
-  vgmNumber: string;
-  containerNumber: string;
-  bookingNumber: string;
-  vgmWeight: number;
-  unit: string;
-  carrierName: string;
-  vesselName: string;
-  voyageNumber: string;
-  weighingDateTime: string;
+  deliveryNo: string;
+  material: string;
+  exportInvoiceNo: string;
+  bookingNo: string;
+  shipperName: string;
+  shipperLicenseNo: string;
+  authorizedOfficial: string;
+  contactDetails: string;
+  containerNo: string;
+  containerSize: string;
+  maxPermissibleWeight: number;
+  weighbridgeAddress: string;
   weighingMethod: string;
-  weighingStation: string;
-  authorizedSignatory: string;
-  status: string;
-  certificationId: string;
+  grossWeight: number;
+  tareWeight: number;
+  vgmWeight: number;
+  weighingDateTime: string;
+  weighingSlipNo: string;
+  containerType: string;
+  hazardousDetails: string;
   mode: 'MOCK_DATA' | 'LIVE_SAP';
+  vgmNumber: string;
 }
 
 export default function VGMApp() {
@@ -25,6 +32,7 @@ export default function VGMApp() {
   const [loading, setLoading] = useState(false);
   const [vgmData, setVgmData] = useState<VgmDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'all' | 'shipper' | 'container' | 'metrics'>('all');
 
   const fetchVgmDetails = async (e: FormEvent) => {
     e.preventDefault();
@@ -53,7 +61,6 @@ export default function VGMApp() {
 
   const handleQuickLoad = (exampleNum: string) => {
     setVgmInput(exampleNum);
-    // Directly fetch using the number
     setLoading(true);
     setError(null);
     setVgmData(null);
@@ -77,19 +84,6 @@ export default function VGMApp() {
     setError(null);
   };
 
-  // Helper to format dates nicely
-  const formatDate = (isoString: string) => {
-    try {
-      const date = new Date(isoString);
-      return date.toLocaleString('en-US', {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-      });
-    } catch (e) {
-      return isoString;
-    }
-  };
-
   return (
     <div className="app-container">
       {/* BACKGROUND GLOWS */}
@@ -99,25 +93,25 @@ export default function VGMApp() {
       {/* HEADER SECTION (Screen Only) */}
       <header className="screen-header">
         <div className="logo-section">
-          <svg className="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-            <line x1="8" y1="21" x2="16" y2="21" />
-            <line x1="12" y1="17" x2="12" y2="21" />
+          {/* Stylized Aarti Logo Icon */}
+          <svg className="logo-icon-svg" viewBox="0 0 100 40" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ height: '32px' }}>
+            <path d="M10 35 L30 5 L40 18 L32 23 L25 10 L15 35 Z" fill="#0284c7" />
+            <path d="M35 35 L45 20 L55 35 Z" fill="#f97316" />
           </svg>
-          <span className="logo-text">Aarti VGM Portal</span>
+          <span className="logo-text">Aarti VGM Print Console</span>
         </div>
         <div className="connection-badge">
           <span className="status-indicator active"></span>
-          SAP Gateway Ready
+          SAP Web Gateway Connected
         </div>
       </header>
 
       <main className="main-content">
         {/* LOOKUP FORM (Screen Only) */}
         <section className="search-section">
-          <h1 className="search-title">Retrieve Verified Gross Mass</h1>
+          <h1 className="search-title">Aarti Pharmalabs VGM Portal</h1>
           <p className="search-subtitle">
-            Enter a VGM ID to fetch verified shipping details from the SAP Gateway and generate a printable SOLAS-compliant slip.
+            Input a VGM Slip / Delivery / Container ID to retrieve logistics data directly from the SAP REST API and generate official shipping documents.
           </p>
 
           <form onSubmit={fetchVgmDetails} className="search-form">
@@ -128,7 +122,7 @@ export default function VGMApp() {
               </svg>
               <input
                 type="text"
-                placeholder="e.g. VGM100234, VGM88492"
+                placeholder="Enter VGM Number (e.g. VGM77821, VGM99302)"
                 value={vgmInput}
                 onChange={(e) => setVgmInput(e.target.value)}
                 className="vgm-input"
@@ -140,10 +134,10 @@ export default function VGMApp() {
                 {loading ? (
                   <>
                     <span className="spinner"></span>
-                    Fetching SAP...
+                    Querying SAP Gateway...
                   </>
                 ) : (
-                  'Retrieve Document'
+                  'Retrieve VGM Details'
                 )}
               </button>
               {vgmData && (
@@ -155,7 +149,7 @@ export default function VGMApp() {
           </form>
 
           <div className="quick-test-panel">
-            <span className="quick-test-label">Quick Test IDs:</span>
+            <span className="quick-test-label">Sandbox Test IDs:</span>
             <button onClick={() => handleQuickLoad('VGM77821')} className="quick-btn">VGM77821</button>
             <button onClick={() => handleQuickLoad('VGM99302')} className="quick-btn">VGM99302</button>
             <button onClick={() => handleQuickLoad('VGM10045')} className="quick-btn">VGM10045</button>
@@ -171,33 +165,22 @@ export default function VGMApp() {
               <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
             <div className="error-message">
-              <strong>SAP Retrieval Failed</strong>
+              <strong>SAP OData Service Error</strong>
               <p>{error}</p>
             </div>
           </div>
         )}
 
-        {/* SKELETON LOADER STATE */}
+        {/* SKELETON LOADER */}
         {loading && (
           <div className="skeleton-card">
             <div className="skeleton-header">
               <div className="skeleton-bar skeleton-title-bar"></div>
               <div className="skeleton-bar skeleton-badge-bar"></div>
             </div>
-            <div className="skeleton-grid">
-              <div className="skeleton-column">
-                <div className="skeleton-bar skeleton-data-row"></div>
-                <div className="skeleton-bar skeleton-data-row"></div>
-                <div className="skeleton-bar skeleton-data-row"></div>
-                <div className="skeleton-bar skeleton-data-row"></div>
-              </div>
-              <div className="skeleton-column">
-                <div className="skeleton-bar skeleton-data-row"></div>
-                <div className="skeleton-bar skeleton-data-row"></div>
-                <div className="skeleton-bar skeleton-data-row"></div>
-                <div className="skeleton-bar skeleton-data-row"></div>
-              </div>
-            </div>
+            <div className="skeleton-data-row"></div>
+            <div className="skeleton-data-row"></div>
+            <div className="skeleton-data-row"></div>
           </div>
         )}
 
@@ -206,75 +189,138 @@ export default function VGMApp() {
           <section className="details-card fade-in">
             <div className="details-card-header">
               <div>
-                <span className="badge badge-vgm-number">{vgmData.vgmNumber}</span>
+                <span className="badge badge-vgm-number">VGM: {vgmData.vgmNumber}</span>
                 <span className={`badge ${vgmData.mode === 'LIVE_SAP' ? 'badge-mode-live' : 'badge-mode-mock'}`}>
-                  {vgmData.mode === 'LIVE_SAP' ? 'Live SAP Gateway' : 'Demonstration / Sandbox Mode'}
+                  {vgmData.mode === 'LIVE_SAP' ? 'Live SAP Gateway' : 'Sandbox (Simulated SAP)'}
                 </span>
               </div>
               <div className="certification-badge-wrapper">
-                <span className="status-label">Transmit Status</span>
-                <span className="badge badge-status-ok">SUCCESS</span>
+                <span className="status-label">Transmission Status</span>
+                <span className="badge badge-status-ok">VERIFIED & SENT</span>
               </div>
             </div>
 
-            <div className="details-grid">
-              {/* PRIMARY PARAMETERS */}
-              <div className="details-panel primary-panel">
-                <div className="weight-display-container">
-                  <span className="weight-label">Verified Gross Mass (VGM)</span>
-                  <div className="weight-value-box">
-                    <span className="weight-number">
-                      {vgmData.vgmWeight.toLocaleString()}
-                    </span>
-                    <span className="weight-unit">{vgmData.unit}</span>
-                  </div>
-                </div>
+            {/* Segmented Tab controls for dashboard readability */}
+            <div className="dashboard-tabs">
+              <button onClick={() => setActiveTab('all')} className={`tab-btn ${activeTab === 'all' ? 'active' : ''}`}>All Fields</button>
+              <button onClick={() => setActiveTab('shipper')} className={`tab-btn ${activeTab === 'shipper' ? 'active' : ''}`}>Shipper & Billing</button>
+              <button onClick={() => setActiveTab('container')} className={`tab-btn ${activeTab === 'container' ? 'active' : ''}`}>Container Info</button>
+              <button onClick={() => setActiveTab('metrics')} className={`tab-btn ${activeTab === 'metrics' ? 'active' : ''}`}>Weights & Weighbridge</button>
+            </div>
 
-                <div className="data-list">
-                  <div className="data-item">
-                    <span className="data-label">Container Number</span>
-                    <span className="data-value highlight">{vgmData.containerNumber}</span>
+            <div className="details-dashboard-content">
+              <div className="dashboard-grid">
+                
+                {/* Section A: Commercial & Shipper Info */}
+                {(activeTab === 'all' || activeTab === 'shipper') && (
+                  <div className="dashboard-panel">
+                    <h3 className="panel-title-text">Shipper & Commercial Data</h3>
+                    <div className="dashboard-list">
+                      <div className="list-item">
+                        <span className="list-lbl">Delivery No.</span>
+                        <span className="list-val font-mono">{vgmData.deliveryNo}</span>
+                      </div>
+                      <div className="list-item">
+                        <span className="list-lbl">Material Description</span>
+                        <span className="list-val">{vgmData.material}</span>
+                      </div>
+                      <div className="list-item">
+                        <span className="list-lbl">Export Invoice No.</span>
+                        <span className="list-val font-mono">{vgmData.exportInvoiceNo}</span>
+                      </div>
+                      <div className="list-item">
+                        <span className="list-lbl">Booking No.</span>
+                        <span className="list-val font-mono">{vgmData.bookingNo}</span>
+                      </div>
+                      <div className="list-item">
+                        <span className="list-lbl">Shipper Name</span>
+                        <span className="list-val">{vgmData.shipperName}</span>
+                      </div>
+                      <div className="list-item">
+                        <span className="list-lbl">Shipper Reg / License (IEC)</span>
+                        <span className="list-val font-mono">{vgmData.shipperLicenseNo}</span>
+                      </div>
+                      <div className="list-item">
+                        <span className="list-lbl">Authorized Signatory</span>
+                        <span className="list-val highlight-declarant">{vgmData.authorizedOfficial}</span>
+                      </div>
+                      <div className="list-item">
+                        <span className="list-lbl">Shipper Contact No.</span>
+                        <span className="list-val">{vgmData.contactDetails}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="data-item">
-                    <span className="data-label">Booking Number</span>
-                    <span className="data-value highlight">{vgmData.bookingNumber}</span>
-                  </div>
-                  <div className="data-item">
-                    <span className="data-label">Certificate ID</span>
-                    <span className="data-value font-mono">{vgmData.certificationId}</span>
-                  </div>
-                </div>
-              </div>
+                )}
 
-              {/* SHIPMENT METADATA */}
-              <div className="details-panel secondary-panel">
-                <h3 className="panel-title">Shipping & Weighing Metadata</h3>
-                <div className="data-list">
-                  <div className="data-item">
-                    <span className="data-label">Vessel Name</span>
-                    <span className="data-value">{vgmData.vesselName} (Voyage: {vgmData.voyageNumber})</span>
+                {/* Section B: Container Info */}
+                {(activeTab === 'all' || activeTab === 'container') && (
+                  <div className="dashboard-panel">
+                    <h3 className="panel-title-text">Container Specs & Classification</h3>
+                    <div className="dashboard-list">
+                      <div className="list-item">
+                        <span className="list-lbl">Container Number</span>
+                        <span className="list-val font-mono font-bold-cyan">{vgmData.containerNo}</span>
+                      </div>
+                      <div className="list-item">
+                        <span className="list-lbl">Container Size & Type</span>
+                        <span className="list-val">{vgmData.containerSize}</span>
+                      </div>
+                      <div className="list-item">
+                        <span className="list-lbl">Max Permissible Weight (CSC)</span>
+                        <span className="list-val">{vgmData.maxPermissibleWeight.toLocaleString()} KG</span>
+                      </div>
+                      <div className="list-item">
+                        <span className="list-lbl">Cargo Type</span>
+                        <span className="list-val">{vgmData.containerType}</span>
+                      </div>
+                      <div className="list-item">
+                        <span className="list-lbl">UN No / Class / PG / IMDG</span>
+                        <span className="list-val font-mono">{vgmData.hazardousDetails}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="data-item">
-                    <span className="data-label">Carrier</span>
-                    <span className="data-value">{vgmData.carrierName}</span>
+                )}
+
+                {/* Section C: Weights & Weighbridge */}
+                {(activeTab === 'all' || activeTab === 'metrics') && (
+                  <div className="dashboard-panel">
+                    <h3 className="panel-title-text">Weight Verification Metrics</h3>
+                    <div className="dashboard-list">
+                      <div className="weight-stat-box">
+                        <span className="weight-stat-lbl">VERIFIED GROSS MASS (VGM)</span>
+                        <div className="weight-stat-num-box">
+                          <span className="weight-stat-num">{vgmData.vgmWeight.toLocaleString()}</span>
+                          <span className="weight-stat-unit">KG</span>
+                        </div>
+                      </div>
+                      <div className="list-item">
+                        <span className="list-lbl">Weighbridge address & Reg</span>
+                        <span className="list-val">{vgmData.weighbridgeAddress}</span>
+                      </div>
+                      <div className="list-item">
+                        <span className="list-lbl">Weighing Method</span>
+                        <span className="list-val">{vgmData.weighingMethod}</span>
+                      </div>
+                      <div className="list-item">
+                        <span className="list-lbl">Gross Weight + Pallet Weight</span>
+                        <span className="list-val">{vgmData.grossWeight.toLocaleString()} KG</span>
+                      </div>
+                      <div className="list-item">
+                        <span className="list-lbl">Tare Weight of Container</span>
+                        <span className="list-val">{vgmData.tareWeight.toLocaleString()} KG</span>
+                      </div>
+                      <div className="list-item">
+                        <span className="list-lbl">Date & Time of Weighing</span>
+                        <span className="list-val font-mono">{vgmData.weighingDateTime}</span>
+                      </div>
+                      <div className="list-item">
+                        <span className="list-lbl">Weighing Slip Number</span>
+                        <span className="list-val font-mono">{vgmData.weighingSlipNo}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="data-item">
-                    <span className="data-label">Weigh Date & Time</span>
-                    <span className="data-value">{formatDate(vgmData.weighingDateTime)}</span>
-                  </div>
-                  <div className="data-item">
-                    <span className="data-label">Weighing Method</span>
-                    <span className="data-value">{vgmData.weighingMethod}</span>
-                  </div>
-                  <div className="data-item">
-                    <span className="data-label">Weighing Station</span>
-                    <span className="data-value">{vgmData.weighingStation}</span>
-                  </div>
-                  <div className="data-item">
-                    <span className="data-label">Authorized Declarant</span>
-                    <span className="data-value signatory-value">{vgmData.authorizedSignatory}</span>
-                  </div>
-                </div>
+                )}
+
               </div>
             </div>
 
@@ -285,7 +331,7 @@ export default function VGMApp() {
                   <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
                   <rect x="6" y="14" width="12" height="8" />
                 </svg>
-                Print Document
+                Print Official Slip
               </button>
             </div>
           </section>
@@ -294,156 +340,151 @@ export default function VGMApp() {
 
       {/* FOOTER (Screen Only) */}
       <footer className="screen-footer">
-        <p>Aarti VGM Print Console &bull; Optimized for Vercel Serverless &bull; Version 1.0.0</p>
+        <p>Aarti Pharmalabs Ltd &bull; Internal Shipping Document Portal &bull; Standard Vercel Serverless Integration</p>
       </footer>
 
-      {/* DEDICATED PRINT-ONLY LAYOUT (Always hidden on screen, formatted via CSS for print) */}
+      {/* ========================================================
+         DEDICATED PRINT-ONLY LAYOUT (Matches the provided PDF)
+         ======================================================== */}
       {vgmData && (
-        <div className="print-only-container">
-          <div className="print-header">
-            <div className="print-title-section">
-              <h1>VERIFIED GROSS MASS (VGM) CERTIFICATE</h1>
-              <p className="solas-disclaimer">SOLAS Chapter VI, Regulation 2 Compliant Document</p>
-            </div>
-            <div className="print-doc-meta">
-              <div className="meta-box">
-                <span className="meta-box-label">Certificate ID:</span>
-                <span className="meta-box-value font-mono">{vgmData.certificationId}</span>
-              </div>
-              <div className="meta-box">
-                <span className="meta-box-label">Date Generated:</span>
-                <span className="meta-box-value">{formatDate(new Date().toISOString())}</span>
-              </div>
-            </div>
-          </div>
-
-          <table className="print-table">
-            <thead>
-              <tr>
-                <th colSpan={4} className="table-section-header">1. SHIPMENT IDENTIFICATION</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="cell-label w-25">VGM Record Number:</td>
-                <td className="cell-value w-25 font-bold">{vgmData.vgmNumber}</td>
-                <td className="cell-label w-25">Booking Number:</td>
-                <td className="cell-value w-25 font-bold">{vgmData.bookingNumber}</td>
-              </tr>
-              <tr>
-                <td className="cell-label">Container Number:</td>
-                <td className="cell-value font-bold font-mono">{vgmData.containerNumber}</td>
-                <td className="cell-label">Carrier Name:</td>
-                <td className="cell-value">{vgmData.carrierName}</td>
-              </tr>
-              <tr>
-                <td className="cell-label">Vessel Name:</td>
-                <td className="cell-value">{vgmData.vesselName}</td>
-                <td className="cell-label">Voyage Number:</td>
-                <td className="cell-value">{vgmData.voyageNumber}</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <table className="print-table">
-            <thead>
-              <tr>
-                <th colSpan={4} className="table-section-header">2. VERIFIED GROSS MASS METRICS</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="cell-label w-25">Verified Weight:</td>
-                <td className="cell-value w-25 font-bold highlight-print-weight">
-                  {vgmData.vgmWeight.toLocaleString()} {vgmData.unit}
-                </td>
-                <td className="cell-label w-25">Weighing Method:</td>
-                <td className="cell-value w-25">{vgmData.weighingMethod}</td>
-              </tr>
-              <tr>
-                <td className="cell-label">Weighing Timestamp:</td>
-                <td className="cell-value">{formatDate(vgmData.weighingDateTime)}</td>
-                <td className="cell-label">Weighing Station:</td>
-                <td className="cell-value">{vgmData.weighingStation}</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <div className="print-declaration">
-            <h3>3. DECLARATION & AUTHORIZATION</h3>
-            <p>
-              We hereby declare that the Verified Gross Mass (VGM) details submitted in this document are correct and have
-              been obtained in accordance with the requirements of the International Convention for the Safety of Life at
-              Sea (SOLAS) Chapter VI Regulation 2, and the guidelines set forth by local maritime regulatory agencies.
-            </p>
-          </div>
-
-          <div className="print-signatures">
-            <div className="signature-column">
-              <span className="signature-title">Authorized Signatory / Declarant:</span>
-              <div className="signature-line">
-                <span className="signature-font">{vgmData.authorizedSignatory}</span>
-              </div>
-              <span className="signature-subtext">Signature on file (SAP Authorized Login)</span>
-            </div>
-
-            <div className="signature-column">
-              <span className="signature-title">Transmission Verification Stamp:</span>
-              <div className="stamp-box">
-                <div className="stamp-text-status">TRANSMITTED</div>
-                <div className="stamp-text-time">{formatDate(vgmData.weighingDateTime)}</div>
-                <div className="stamp-text-source">SAP HOST INTEGRATION</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="print-footer">
-            <div className="barcode-placeholder">
-              {/* Inline SVG rendering a simple mock barcode */}
-              <svg width="220" height="40" viewBox="0 0 100 20">
-                <rect x="0" y="0" width="1" height="20" fill="black" />
-                <rect x="2" y="0" width="2" height="20" fill="black" />
-                <rect x="5" y="0" width="1" height="20" fill="black" />
-                <rect x="7" y="0" width="1" height="20" fill="black" />
-                <rect x="9" y="0" width="3" height="20" fill="black" />
-                <rect x="13" y="0" width="1" height="20" fill="black" />
-                <rect x="16" y="0" width="2" height="20" fill="black" />
-                <rect x="19" y="0" width="1" height="20" fill="black" />
-                <rect x="21" y="0" width="4" height="20" fill="black" />
-                <rect x="26" y="0" width="1" height="20" fill="black" />
-                <rect x="28" y="0" width="2" height="20" fill="black" />
-                <rect x="31" y="0" width="1" height="20" fill="black" />
-                <rect x="33" y="0" width="3" height="20" fill="black" />
-                <rect x="37" y="0" width="1" height="20" fill="black" />
-                <rect x="39" y="0" width="2" height="20" fill="black" />
-                <rect x="42" y="0" width="1" height="20" fill="black" />
-                <rect x="44" y="0" width="4" height="20" fill="black" />
-                <rect x="49" y="0" width="1" height="20" fill="black" />
-                <rect x="51" y="0" width="2" height="20" fill="black" />
-                <rect x="54" y="0" width="1" height="20" fill="black" />
-                <rect x="56" y="0" width="3" height="20" fill="black" />
-                <rect x="60" y="0" width="1" height="20" fill="black" />
-                <rect x="62" y="0" width="2" height="20" fill="black" />
-                <rect x="65" y="0" width="1" height="20" fill="black" />
-                <rect x="67" y="0" width="4" height="20" fill="black" />
-                <rect x="72" y="0" width="1" height="20" fill="black" />
-                <rect x="74" y="0" width="2" height="20" fill="black" />
-                <rect x="77" y="0" width="1" height="20" fill="black" />
-                <rect x="79" y="0" width="3" height="20" fill="black" />
-                <rect x="83" y="0" width="1" height="20" fill="black" />
-                <rect x="85" y="0" width="2" height="20" fill="black" />
-                <rect x="88" y="0" width="1" height="20" fill="black" />
-                <rect x="90" y="0" width="4" height="20" fill="black" />
-                <rect x="95" y="0" width="1" height="20" fill="black" />
-                <rect x="97" y="0" width="2" height="20" fill="black" />
+        <div className="aarti-print-document">
+          
+          {/* Header Section */}
+          <div className="print-header-layout">
+            <div className="header-logo-container">
+              {/* Exact Stylized Logo from Aarti Pharmalabs */}
+              <svg className="aarti-logo-print" viewBox="0 0 120 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 32 L35 4 L48 18 L38 23 L30 11 L18 32 Z" fill="#0f4c81" />
+                <path d="M42 32 L54 16 L66 32 Z" fill="#f05a28" />
               </svg>
-              <div className="barcode-number">*{vgmData.certificationId}*</div>
+              <div className="header-titles">
+                <h1 className="aarti-title-main">AARTI PHARMALABS LTD</h1>
+                <p className="aarti-address">
+                  Plot No. D18, Tarapur MIDC, Boisar, District - Palghar, Maharashtra - 401506, India
+                </p>
+                <p className="aarti-website">WEBSITE WWW.AARTIPHARMALABS.COM</p>
+              </div>
             </div>
-            <p className="system-footer-line">
-              This document is system generated from Aarti VGM database using digital authorization signatures. 
-              No physical signature is required under SOLAS guidance circular MSC.1/Circ.1475.
-            </p>
           </div>
+
+          {/* Document Section Banner */}
+          <div className="document-banner-box">
+            INFORMATION ABOUT VERIFIED GROSS MASS OF CONTAINER
+          </div>
+
+          {/* Table Container */}
+          <table className="aarti-table">
+            <thead>
+              <tr>
+                <th className="th-sr">Sr. No.</th>
+                <th className="th-desc">Details of Information</th>
+                <th className="th-part">Particulars</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="text-center font-bold">1</td>
+                <td>Delivery No.</td>
+                <td className="font-bold">{vgmData.deliveryNo}</td>
+              </tr>
+              <tr>
+                <td className="text-center font-bold">2</td>
+                <td>Material</td>
+                <td>{vgmData.material}</td>
+              </tr>
+              <tr>
+                <td className="text-center font-bold">3</td>
+                <td>Export Invoice No.</td>
+                <td>{vgmData.exportInvoiceNo}</td>
+              </tr>
+              <tr>
+                <td className="text-center font-bold">4</td>
+                <td>Booking No.</td>
+                <td className="font-bold">{vgmData.bookingNo}</td>
+              </tr>
+              <tr>
+                <td className="text-center font-bold">5</td>
+                <td>Name of the Shipper code</td>
+                <td>{vgmData.shipperName}</td>
+              </tr>
+              <tr>
+                <td className="text-center font-bold">6</td>
+                <td>Shipper Registration / License No (IEC No / CIN No)</td>
+                <td>{vgmData.shipperLicenseNo}</td>
+              </tr>
+              <tr>
+                <td className="text-center font-bold">7</td>
+                <td>Name & Designation of the Official of the Shipper authorized to Sign document</td>
+                <td className="font-bold">{vgmData.authorizedOfficial}</td>
+              </tr>
+              <tr>
+                <td className="text-center font-bold">8</td>
+                <td>24 x 7 Contact details of Authorized official of Shipper</td>
+                <td>{vgmData.contactDetails}</td>
+              </tr>
+              <tr>
+                <td className="text-center font-bold">9</td>
+                <td>Container No</td>
+                <td className="font-bold font-mono">{vgmData.containerNo}</td>
+              </tr>
+              <tr>
+                <td className="text-center font-bold">10</td>
+                <td>Container Size (TEU/FUE/Others)</td>
+                <td>{vgmData.containerSize}</td>
+              </tr>
+              <tr>
+                <td className="text-center font-bold">11</td>
+                <td>Maximum permissible weight of container as per the CSC Plate</td>
+                <td>{vgmData.maxPermissibleWeight}</td>
+              </tr>
+              <tr>
+                <td className="text-center font-bold">12</td>
+                <td>Weighbridge registration no & address of weighbridge</td>
+                <td>{vgmData.weighbridgeAddress}</td>
+              </tr>
+              <tr>
+                <td className="text-center font-bold">13</td>
+                <td>Weighing Method (Method-1 /Method-2)</td>
+                <td className="font-bold">{vgmData.weighingMethod}</td>
+              </tr>
+              <tr>
+                <td className="text-center font-bold">14</td>
+                <td>Gross weight + pallet Weight</td>
+                <td>{vgmData.grossWeight}</td>
+              </tr>
+              <tr>
+                <td className="text-center font-bold">15</td>
+                <td>Tare weight of container</td>
+                <td>{vgmData.tareWeight}</td>
+              </tr>
+              <tr>
+                <td className="text-center font-bold">16</td>
+                <td>Verified Gross Mass of the Container (with unit of measure KG / MT / LBS)</td>
+                <td className="font-bold highlight-print-val">{vgmData.vgmWeight}</td>
+              </tr>
+              <tr>
+                <td className="text-center font-bold">17</td>
+                <td>Date & Time of Weighing</td>
+                <td className="font-mono">{vgmData.weighingDateTime}</td>
+              </tr>
+              <tr>
+                <td className="text-center font-bold">18</td>
+                <td>Weighing Slip No.</td>
+                <td className="font-mono">{vgmData.weighingSlipNo}</td>
+              </tr>
+              <tr>
+                <td className="text-center font-bold">19</td>
+                <td>Type (Normal / Reefer / Hazardous / Others)</td>
+                <td>{vgmData.containerType}</td>
+              </tr>
+              <tr>
+                <td className="text-center font-bold">20</td>
+                <td>If Hazardous, UN No / Class / PG / IMDG</td>
+                <td className="font-mono">{vgmData.hazardousDetails}</td>
+              </tr>
+            </tbody>
+          </table>
+
         </div>
       )}
     </div>

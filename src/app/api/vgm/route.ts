@@ -22,53 +22,57 @@ export async function GET(request: Request) {
     sapPass !== 'your_sap_password';
 
   if (!isConfigured) {
-    // Simulated mock fallback for local testing and Vercel preview
-    console.log(`[API Route] Running in Mock Mode for VGM Number: ${vgmNumber}`);
+    console.log(`[API Route] Running in Aarti Pharmalabs Mock Mode for VGM Number: ${vgmNumber}`);
     
     // Simulate minor network delay (800ms) for realistic UX
     await new Promise((resolve) => setTimeout(resolve, 800));
 
-    // Create a deterministic hash from the VGM string to generate consistent fake data
+    // Create a deterministic hash from the VGM string to generate consistent mock data
     const hash = Array.from(vgmNumber).reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    const weight = 16000 + (hash % 14000); // 16,000 - 30,000 KG
-    const containerSuffix = (1000000 + (hash * 7) % 9000000).toString();
-    const certNum = (100000 + (hash * 13) % 900000).toString();
+    const slipNo = (1100 + (hash % 100)).toString();
+    const deliveryNo = `00800${100000 + (hash * 7) % 900000}`;
+    const bookingNo = `98951${(1000 + (hash * 3) % 9000)}`;
+    const invoiceNo = `PEX/100${100 + (hash % 900)}/26-27`;
+    
+    const grossWeight = 20000 + (hash % 1000) * 10; // 20000 to 30000
+    const tareWeight = 2300;
+    const vgmWeight = grossWeight + tareWeight; // Gross + Tare
 
     return NextResponse.json({
-      vgmNumber: vgmNumber.toUpperCase(),
-      containerNumber: `MSCU${containerSuffix}`,
-      bookingNumber: `BKG-${20000000 + (hash * 17) % 80000000}`,
-      vgmWeight: weight,
-      unit: 'KG',
-      carrierName: 'MSC Mediterranean Shipping Co.',
-      vesselName: 'MSC LORETO',
-      voyageNumber: `60${hash % 10}W`,
-      weighingDateTime: new Date(Date.now() - 3600000 * (hash % 24)).toISOString(),
-      weighingMethod: 'Method 1 (Scale Weighing)',
-      weighingStation: 'Jawaharlal Nehru Port Trust (JNPT) Scale #5',
-      authorizedSignatory: 'Rajesh K. Mehta (Declarant Manager)',
-      status: 'TRANSMITTED_OK',
-      certificationId: `VGM-JNPT-${certNum}`,
-      mode: 'MOCK_DATA'
+      deliveryNo: deliveryNo,
+      material: hash % 2 === 0 ? 'DES -Export Drum MS' : 'Chemical Compounds - UN Bulk',
+      exportInvoiceNo: invoiceNo,
+      bookingNo: bookingNo,
+      shipperName: 'AARTI PHARMALABS LTD',
+      shipperLicenseNo: 'AASCA9722G',
+      authorizedOfficial: 'Kinjal Vikam Export Logistic Head',
+      contactDetails: '9324005790',
+      containerNo: `UACU${4000000 + (hash * 17) % 999999}`,
+      containerSize: '20 BOX',
+      maxPermissibleWeight: 30480,
+      weighbridgeAddress: '474281 AARTI PHARMALAB LIMITED - UNIT VI',
+      weighingMethod: 'METHOD-1',
+      grossWeight: grossWeight,
+      tareWeight: tareWeight,
+      vgmWeight: vgmWeight,
+      weighingDateTime: '20260617114000', // Matches format from template image
+      weighingSlipNo: slipNo,
+      containerType: 'Hazardous',
+      hazardousDetails: '1594/6.1/II',
+      mode: 'MOCK_DATA',
+      vgmNumber: vgmNumber.toUpperCase()
     });
   }
 
   try {
     const authHeader = `Basic ${Buffer.from(`${sapUser}:${sapPass}`).toString('base64')}`;
     
-    // We accommodate common SAP OData or REST URL formats:
-    // 1. Entity endpoint: /ZVGM_DETAILS_SRV/VgmSet('VGM12345')
-    // 2. Query filter endpoint: /ZVGM_DETAILS_SRV/VgmSet?$filter=VgmNumber eq 'VGM12345'
     let requestUrl = sapUrl;
     if (sapUrl.endsWith("')")) {
-      // Already an entity call pattern
       requestUrl = sapUrl;
     } else if (sapUrl.includes('?$filter=')) {
-      // Already has a filter query
       requestUrl = sapUrl;
     } else {
-      // Append standard OData key style to the base entity set
-      // Remove trailing slash if present
       const cleanBase = sapUrl.endsWith('/') ? sapUrl.slice(0, -1) : sapUrl;
       requestUrl = `${cleanBase}('${encodeURIComponent(vgmNumber.toUpperCase())}')`;
     }
@@ -82,7 +86,7 @@ export async function GET(request: Request) {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
-      next: { revalidate: 30 } // Cache results for 30s
+      next: { revalidate: 30 }
     });
 
     if (!response.ok) {
@@ -95,27 +99,32 @@ export async function GET(request: Request) {
     }
 
     const data = await response.json();
-    
-    // OData responses usually wrap payload inside a 'd' wrapper
     const record = data.d ? data.d : data;
 
-    // Map common SAP fields to the standard UI-friendly layout
+    // Map your SAP RFC/OData properties to the 20 Aarti Pharmalabs UI template fields
     return NextResponse.json({
-      vgmNumber: record.VgmNumber || record.vgmNumber || vgmNumber.toUpperCase(),
-      containerNumber: record.ContainerNo || record.containerNumber || record.Container || 'N/A',
-      bookingNumber: record.BookingNo || record.bookingNumber || record.Booking || 'N/A',
-      vgmWeight: parseFloat(record.VgmWeight || record.weight || record.Weight || '0'),
-      unit: record.Unit || record.uom || 'KG',
-      carrierName: record.CarrierName || record.carrier || 'N/A',
-      vesselName: record.VesselName || record.vessel || 'N/A',
-      voyageNumber: record.VoyageNo || record.voyage || 'N/A',
-      weighingDateTime: record.WeighDateTime || record.weighDate || new Date().toISOString(),
-      weighingMethod: record.WeighMethod || record.method || 'Method 1',
-      weighingStation: record.WeighStation || record.station || 'N/A',
-      authorizedSignatory: record.AuthSignatory || record.signatory || 'N/A',
-      status: record.Status || 'APPROVED',
-      certificationId: record.CertId || record.certNumber || `VGM-SAP-${vgmNumber.toUpperCase()}`,
-      mode: 'LIVE_SAP'
+      deliveryNo: record.DeliveryNo || record.DeliveryNumber || 'N/A',
+      material: record.Material || record.MaterialDesc || 'N/A',
+      exportInvoiceNo: record.ExportInvoiceNo || record.InvoiceNo || 'N/A',
+      bookingNo: record.BookingNo || record.BookingNumber || 'N/A',
+      shipperName: record.ShipperName || 'AARTI PHARMALABS LTD',
+      shipperLicenseNo: record.ShipperLicenseNo || record.IecNo || 'AASCA9722G',
+      authorizedOfficial: record.AuthOfficial || record.Signatory || 'Kinjal Vikam Export Logistic Head',
+      contactDetails: record.ContactDetails || record.Phone || '9324005790',
+      containerNo: record.ContainerNo || record.Container || 'N/A',
+      containerSize: record.ContainerSize || record.Size || '20 BOX',
+      maxPermissibleWeight: parseFloat(record.MaxPermissibleWeight || record.MaxWeight || '30480'),
+      weighbridgeAddress: record.WeighbridgeAddress || record.Weighbridge || '474281 AARTI PHARMALAB LIMITED - UNIT VI',
+      weighingMethod: record.WeighingMethod || record.Method || 'METHOD-1',
+      grossWeight: parseFloat(record.GrossWeight || '0'),
+      tareWeight: parseFloat(record.TareWeight || '0'),
+      vgmWeight: parseFloat(record.VgmWeight || record.Weight || '0'),
+      weighingDateTime: record.WeighingDateTime || record.WeighDateTime || 'N/A',
+      weighingSlipNo: record.WeighingSlipNo || record.SlipNo || 'N/A',
+      containerType: record.ContainerType || record.Type || 'Hazardous',
+      hazardousDetails: record.HazardousDetails || record.UnNo || 'N/A',
+      mode: 'LIVE_SAP',
+      vgmNumber: record.VgmNumber || vgmNumber.toUpperCase()
     });
 
   } catch (error: any) {
