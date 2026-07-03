@@ -15,11 +15,6 @@
   --error: #ef4444;
   --error-bg: rgba(239, 68, 68, 0.07);
   --font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
-
-  /* Logo Screen/Dark-mode Colors */
-  --logo-dark-blue: #ffffff;
-  --logo-light-blue: #38bdf8;
-  --logo-orange: #f97316;
 }
 
 /* SCREEN RESET & GENERAL BASE */
@@ -94,40 +89,26 @@ body {
   padding-bottom: 16px;
 }
 
-/* BRAND LOGO GRAPHIC SYSTEM */
-.aarti-brand-logo {
+/* BRAND LOGO IMAGE WRAPPERS */
+.logo-container-screen {
+  background-color: #ffffff;
+  padding: 6px 14px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease;
 }
 
-.aarti-symbol {
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
+.logo-container-screen:hover {
+  transform: translateY(-1px);
 }
 
-.aarti-text-group {
-  display: flex;
-  flex-direction: column;
-  line-height: 1;
-}
-
-.aarti-text-top {
-  font-size: 20px;
-  font-weight: 900;
-  letter-spacing: -0.2px;
-  color: var(--logo-dark-blue);
-  transition: color 0.2s ease;
-}
-
-.aarti-text-bottom {
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 2.2px;
-  color: var(--text-secondary);
-  margin-top: 2px;
-  transition: color 0.2s ease;
+.aarti-brand-logo-img {
+  height: 32px;
+  width: auto;
+  display: block;
 }
 
 .connection-badge {
@@ -721,13 +702,6 @@ body {
     padding: 0 !important;
   }
 
-  /* Setup brand print logo values */
-  :root {
-    --logo-dark-blue: #0c3260 !important;
-    --logo-light-blue: #0092d6 !important;
-    --logo-orange: #ea5e1a !important;
-  }
-
   /* Show Aarti print layout container */
   .aarti-print-document {
     display: block !important;
@@ -752,32 +726,28 @@ body {
     height: 70px;
   }
 
-  .header-logo-container .aarti-brand-logo {
+  .logo-container-screen {
+    display: none !important;
+  }
+
+  .logo-container-print {
+    display: block !important;
     position: absolute;
     left: 0;
     top: 50%;
     transform: translateY(-50%);
   }
 
-  .aarti-symbol {
-    width: 50px !important;
-    height: 50px !important;
-  }
-
-  .aarti-text-top {
-    font-size: 24px !important;
-    color: #0c3260 !important;
-  }
-
-  .aarti-text-bottom {
-    font-size: 10px !important;
-    color: #718096 !important;
+  .aarti-brand-logo-img-print {
+    height: 52px;
+    width: auto;
+    display: block;
   }
 
   .header-titles {
     text-align: center;
     width: 100%;
-    padding-left: 140px; /* offset the logo width */
+    padding-left: 170px; /* offset the logo image width */
   }
 
   .aarti-title-main {
