@@ -95,9 +95,9 @@ export default function VGMApp() {
         <header className="screen-header">
           <div className="aarti-brand-logo">
             <svg className="aarti-symbol" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 90 L44 12 L56 12 L30 90 Z" fill="var(--logo-dark-blue)" />
-              <path d="M44 35 L76 90 L62 90 L36 45 Z" fill="var(--logo-light-blue)" />
-              <path d="M18 84 C32 60, 52 35, 78 15 C60 30, 42 58, 25 88 Z" fill="var(--logo-orange)" />
+              <path d="M15 90 L46 15 L58 15 L32 90 Z" fill="var(--logo-dark-blue)" />
+              <path d="M46 40 L78 90 L64 90 L37 47 Z" fill="var(--logo-light-blue)" />
+              <path d="M14 84 C 24 55, 48 15, 84 8 C 65 20, 38 48, 22 88 Z" fill="var(--logo-orange)" />
             </svg>
             <div className="aarti-text-group">
               <div className="aarti-text-top">AARTI</div>
@@ -359,9 +359,9 @@ export default function VGMApp() {
             <div className="header-logo-container">
               <div className="aarti-brand-logo">
                 <svg className="aarti-symbol" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 90 L44 12 L56 12 L30 90 Z" fill="var(--logo-dark-blue)" />
-                  <path d="M44 35 L76 90 L62 90 L36 45 Z" fill="var(--logo-light-blue)" />
-                  <path d="M18 84 C32 60, 52 35, 78 15 C60 30, 42 58, 25 88 Z" fill="var(--logo-orange)" />
+                  <path d="M15 90 L46 15 L58 15 L32 90 Z" fill="var(--logo-dark-blue)" />
+                  <path d="M46 40 L78 90 L64 90 L37 47 Z" fill="var(--logo-light-blue)" />
+                  <path d="M14 84 C 24 55, 48 15, 84 8 C 65 20, 38 48, 22 88 Z" fill="var(--logo-orange)" />
                 </svg>
                 <div className="aarti-text-group">
                   <div className="aarti-text-top">AARTI</div>
