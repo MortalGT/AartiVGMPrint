@@ -95,9 +95,18 @@ export default function VGMApp() {
         <header className="screen-header">
           <div className="aarti-brand-logo">
             <svg className="aarti-symbol" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M15 90 L46 15 L58 15 L32 90 Z" fill="var(--logo-dark-blue)" />
-              <path d="M46 40 L78 90 L64 90 L37 47 Z" fill="var(--logo-light-blue)" />
-              <path d="M14 84 C 24 55, 48 15, 84 8 C 65 20, 38 48, 22 88 Z" fill="var(--logo-orange)" />
+              <defs>
+                <linearGradient id="aarti-orange-grad-screen" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#f89e1b" />
+                  <stop offset="100%" stopColor="#e84c1f" />
+                </linearGradient>
+              </defs>
+              {/* Refined Dark Blue Left Leg */}
+              <path d="M18 90 L42 22 L54 22 L30 90 Z" fill="var(--logo-dark-blue)" />
+              {/* Refined Light Blue Right Leg */}
+              <path d="M44 46 L68 90 L82 90 L53 38 Z" fill="var(--logo-light-blue)" />
+              {/* High-fidelity Orange Swoosh with Gradient Overlay */}
+              <path d="M14 78 C 24 55, 52 14, 88 8 C 72 22, 45 42, 22 84 Z" fill="url(#aarti-orange-grad-screen)" />
             </svg>
             <div className="aarti-text-group">
               <div className="aarti-text-top">AARTI</div>
@@ -359,9 +368,18 @@ export default function VGMApp() {
             <div className="header-logo-container">
               <div className="aarti-brand-logo">
                 <svg className="aarti-symbol" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M15 90 L46 15 L58 15 L32 90 Z" fill="var(--logo-dark-blue)" />
-                  <path d="M46 40 L78 90 L64 90 L37 47 Z" fill="var(--logo-light-blue)" />
-                  <path d="M14 84 C 24 55, 48 15, 84 8 C 65 20, 38 48, 22 88 Z" fill="var(--logo-orange)" />
+                  <defs>
+                    <linearGradient id="aarti-orange-grad-print" x1="0%" y1="100%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#f89e1b" />
+                      <stop offset="100%" stopColor="#e84c1f" />
+                    </linearGradient>
+                  </defs>
+                  {/* Refined Dark Blue Left Leg */}
+                  <path d="M18 90 L42 22 L54 22 L30 90 Z" fill="var(--logo-dark-blue)" />
+                  {/* Refined Light Blue Right Leg */}
+                  <path d="M44 46 L68 90 L82 90 L53 38 Z" fill="var(--logo-light-blue)" />
+                  {/* High-fidelity Orange Swoosh with Gradient Overlay */}
+                  <path d="M14 78 C 24 55, 52 14, 88 8 C 72 22, 45 42, 22 84 Z" fill="url(#aarti-orange-grad-print)" />
                 </svg>
                 <div className="aarti-text-group">
                   <div className="aarti-text-top">AARTI</div>
