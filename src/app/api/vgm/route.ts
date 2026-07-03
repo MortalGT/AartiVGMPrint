@@ -5,14 +5,14 @@ export async function GET(request: Request) {
   const vgmNumber = searchParams.get('vgmNumber');
 
   if (!vgmNumber) {
-    return NextResponse.json({ error: 'VGM Number is required' }, { status: 400 });
+    return NextResponse.json({ error: 'Delivery Number (vbeln) is required' }, { status: 400 });
   }
 
   const sapUrl = process.env.SAP_API_URL;
   const sapUser = process.env.SAP_USERNAME;
   const sapPass = process.env.SAP_PASSWORD;
 
-  // Verify if credentials are configured (and not matching the default templates)
+  // Verify if credentials are configured
   const isConfigured =
     sapUrl &&
     sapUrl !== 'https://your-sap-gateway-host:port/sap/opu/odata/sap/ZVGM_DETAILS_SRV/VgmSet' &&
@@ -21,28 +21,27 @@ export async function GET(request: Request) {
     sapPass &&
     sapPass !== 'your_sap_password';
 
+  // Format delivery number to standard SAP 10-digit format if it's purely numeric
+  const formattedVbeln = /^\d+$/.test(vgmNumber.trim()) 
+    ? vgmNumber.trim().padStart(10, '0') 
+    : vgmNumber.trim();
+
   if (!isConfigured) {
-    console.log(`[API Route] Running in Aarti Pharmalabs Mock Mode for VGM Number: ${vgmNumber}`);
-    
-    // Simulate minor network delay (800ms) for realistic UX
+    // Sandbox Mock Mode fallback
+    console.log(`[API Route] Sandbox Mock Mode active for Delivery VBELN: ${formattedVbeln}`);
     await new Promise((resolve) => setTimeout(resolve, 800));
 
-    // Create a deterministic hash from the VGM string to generate consistent mock data
-    const hash = Array.from(vgmNumber).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const hash = Array.from(formattedVbeln).reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const slipNo = (1100 + (hash % 100)).toString();
-    const deliveryNo = `00800${100000 + (hash * 7) % 900000}`;
-    const bookingNo = `98951${(1000 + (hash * 3) % 9000)}`;
-    const invoiceNo = `PEX/100${100 + (hash % 900)}/26-27`;
-    
-    const grossWeight = 20000 + (hash % 1000) * 10; // 20000 to 30000
+    const grossWeight = 20160;
     const tareWeight = 2300;
-    const vgmWeight = grossWeight + tareWeight; // Gross + Tare
+    const vgmWeight = grossWeight + tareWeight;
 
     return NextResponse.json({
-      deliveryNo: deliveryNo,
-      material: hash % 2 === 0 ? 'DES -Export Drum MS' : 'Chemical Compounds - UN Bulk',
-      exportInvoiceNo: invoiceNo,
-      bookingNo: bookingNo,
+      deliveryNo: formattedVbeln,
+      material: 'DES -Export Drum MS (Sandbox)',
+      exportInvoiceNo: `PEX/100${300 + (hash % 10)}/26-27`,
+      bookingNo: `98951${300 + (hash % 100)}`,
       shipperName: 'AARTI PHARMALABS LTD',
       shipperLicenseNo: 'AASCA9722G',
       authorizedOfficial: 'Kinjal Vikam Export Logistic Head',
@@ -55,7 +54,7 @@ export async function GET(request: Request) {
       grossWeight: grossWeight,
       tareWeight: tareWeight,
       vgmWeight: vgmWeight,
-      weighingDateTime: '20260617114000', // Matches format from template image
+      weighingDateTime: '20260617114000',
       weighingSlipNo: slipNo,
       containerType: 'Hazardous',
       hazardousDetails: '1594/6.1/II',
@@ -67,17 +66,10 @@ export async function GET(request: Request) {
   try {
     const authHeader = `Basic ${Buffer.from(`${sapUser}:${sapPass}`).toString('base64')}`;
     
-    let requestUrl = sapUrl;
-    if (sapUrl.endsWith("')")) {
-      requestUrl = sapUrl;
-    } else if (sapUrl.includes('?$filter=')) {
-      requestUrl = sapUrl;
-    } else {
-      const cleanBase = sapUrl.endsWith('/') ? sapUrl.slice(0, -1) : sapUrl;
-      requestUrl = `${cleanBase}('${encodeURIComponent(vgmNumber.toUpperCase())}')`;
-    }
+    // S4/HANA Cloud OData V4 format: filter by vbeln
+    const requestUrl = `${sapUrl}?$filter=vbeln eq '${encodeURIComponent(formattedVbeln)}'`;
 
-    console.log(`[API Route] Connecting to SAP Gateway at: ${requestUrl}`);
+    console.log(`[API Route] Fetching from S/4HANA OData: ${requestUrl}`);
 
     const response = await fetch(requestUrl, {
       method: 'GET',
@@ -86,49 +78,75 @@ export async function GET(request: Request) {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
-      next: { revalidate: 30 }
+      next: { revalidate: 15 } // cache records for 15s
     });
 
     if (!response.ok) {
-      const errorResponse = await response.text();
-      console.error(`[API Route] SAP error status ${response.status}: ${errorResponse}`);
+      const errorText = await response.text();
+      console.error(`[API Route] SAP error status ${response.status}: ${errorText}`);
       return NextResponse.json(
-        { error: `SAP Gateway Error: ${response.status} ${response.statusText}. Check server logs.` },
+        { error: `SAP Cloud Error: ${response.status} ${response.statusText}` },
         { status: response.status }
       );
     }
 
     const data = await response.json();
-    const record = data.d ? data.d : data;
+    const records = data.value;
 
-    // Map your SAP RFC/OData properties to the 20 Aarti Pharmalabs UI template fields
+    if (!records || records.length === 0) {
+      return NextResponse.json(
+        { error: `Delivery Number (VBELN) '${formattedVbeln}' not found in SAP.` },
+        { status: 404 }
+      );
+    }
+
+    const record = records[0];
+
+    // Combine datum (YYYY-MM-DD) and uzeit (HH:MM:SS) to match YYYYMMDDHHMMSS format in PDF
+    let weighingDateStr = 'N/A';
+    if (record.datum && record.uzeit) {
+      const rawDate = record.datum.replace(/-/g, ''); // 2026-06-17 -> 20260617
+      const rawTime = record.uzeit.replace(/:/g, ''); // 11:40:00 -> 114000
+      weighingDateStr = `${rawDate}${rawTime}`;
+    } else if (record.datum) {
+      weighingDateStr = record.datum.replace(/-/g, '');
+    }
+
+    // Map the OData weighing method code (e.g. "01") to text representation
+    let weighingMethodStr = record.zweighing_m || 'METHOD-1';
+    if (weighingMethodStr === '01') {
+      weighingMethodStr = 'METHOD-1';
+    } else if (weighingMethodStr === '02') {
+      weighingMethodStr = 'METHOD-2';
+    }
+
     return NextResponse.json({
-      deliveryNo: record.DeliveryNo || record.DeliveryNumber || 'N/A',
-      material: record.Material || record.MaterialDesc || 'N/A',
-      exportInvoiceNo: record.ExportInvoiceNo || record.InvoiceNo || 'N/A',
-      bookingNo: record.BookingNo || record.BookingNumber || 'N/A',
-      shipperName: record.ShipperName || 'AARTI PHARMALABS LTD',
-      shipperLicenseNo: record.ShipperLicenseNo || record.IecNo || 'AASCA9722G',
-      authorizedOfficial: record.AuthOfficial || record.Signatory || 'Kinjal Vikam Export Logistic Head',
-      contactDetails: record.ContactDetails || record.Phone || '9324005790',
-      containerNo: record.ContainerNo || record.Container || 'N/A',
-      containerSize: record.ContainerSize || record.Size || '20 BOX',
-      maxPermissibleWeight: parseFloat(record.MaxPermissibleWeight || record.MaxWeight || '30480'),
-      weighbridgeAddress: record.WeighbridgeAddress || record.Weighbridge || '474281 AARTI PHARMALAB LIMITED - UNIT VI',
-      weighingMethod: record.WeighingMethod || record.Method || 'METHOD-1',
-      grossWeight: parseFloat(record.GrossWeight || '0'),
-      tareWeight: parseFloat(record.TareWeight || '0'),
-      vgmWeight: parseFloat(record.VgmWeight || record.Weight || '0'),
-      weighingDateTime: record.WeighingDateTime || record.WeighDateTime || 'N/A',
-      weighingSlipNo: record.WeighingSlipNo || record.SlipNo || 'N/A',
-      containerType: record.ContainerType || record.Type || 'Hazardous',
-      hazardousDetails: record.HazardousDetails || record.UnNo || 'N/A',
+      deliveryNo: record.vbeln ? record.vbeln.padStart(10, '0') : formattedVbeln,
+      material: record.ProductName || record.Product || 'N/A',
+      exportInvoiceNo: record.comminvno || 'N/A',
+      bookingNo: record.zbookon || 'N/A',
+      shipperName: record.znofshpcode || 'AARTI PHARMALABS LTD',
+      shipperLicenseNo: record.zshpreg || 'AASCA9722G',
+      authorizedOfficial: record.zndosusd || 'N/A',
+      contactDetails: record.z24x7cnt || 'N/A',
+      containerNo: record.zzcontainer_id || 'N/A',
+      containerSize: record.zcontr_size || 'N/A',
+      maxPermissibleWeight: record.zmpwoc_csc || '30480',
+      weighbridgeAddress: record.zwb_reg || 'N/A',
+      weighingMethod: weighingMethodStr,
+      grossWeight: record.zgnp_wght || '0',
+      tareWeight: record.ztare_wght || '0',
+      vgmWeight: record.zvgm || '0',
+      weighingDateTime: weighingDateStr,
+      weighingSlipNo: record.zw_slip_no || 'N/A',
+      containerType: record.zvgm_type || 'Normal',
+      hazardousDetails: record.zvgm_type_d || 'N/A',
       mode: 'LIVE_SAP',
-      vgmNumber: record.VgmNumber || vgmNumber.toUpperCase()
+      vgmNumber: vgmNumber.toUpperCase()
     });
 
   } catch (error: any) {
-    console.error('[API Route] SAP API Connectivity Error:', error);
+    console.error('[API Route] SAP OData Connectivity Error:', error);
     return NextResponse.json(
       { error: `Connection failed: ${error.message || 'Unknown network error'}` },
       { status: 500 }
